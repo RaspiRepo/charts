@@ -1,0 +1,47 @@
+# From https://github.com/oklog/oklog/wiki/Integrations
+# Run a logspout service on each node, and send the data to the oklog-ingest service.
+apiVersion: extensions/v1beta1
+kind: DaemonSet
+metadata:
+  name: {{ template "fullname" . }}-fluent-bit
+spec:
+  template:
+    metadata:
+      labels:
+        app: {{ template "fullname" . }}-fluent-bit
+        chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+        release: "{{ .Release.Name }}"
+        heritage: "{{ .Release.Service }}"
+    spec:
+      containers:
+        - resources:
+            requests:
+              cpu: 0.15
+          securityContext:
+            privileged: true
+          image: fluent/fluent-bit-kubernetes-daemonset:0.11
+          command:
+            - '/bin/sh'
+            - '-c'
+            - '/fluent-bit/bin/fluent-bit -c /fluent-bit/etc/fluent-bit.conf | /oklog forward {{ template "fullname" . }}-service.{{ $.Release.Namespace }}.svc.cluster.local:3001'
+          name: oklog-forward
+          volumeMounts:
+            - name: varlog
+              mountPath: /var/log
+            - name: varlibdockercontainers
+              mountPath: /var/lib/docker/containers
+              readOnly: true
+            - name: fluentbit-configmap
+              mountPath: /fluent-bit/etc/fluent-bit.conf
+              subPath: fluent-bit.conf
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - name: fluentbit-configmap
+        configMap:
+          name: {{ template "fullname" . }}-fluentbit-cm
+      - name: varlog
+        hostPath:
+          path: /var/log
+      - name: varlibdockercontainers
+        hostPath:
+          path: /var/lib/docker/containers

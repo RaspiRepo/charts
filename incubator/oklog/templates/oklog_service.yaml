@@ -8,10 +8,6 @@ metadata:
     release: "{{ .Release.Name }}"
     heritage: "{{ .Release.Service }}"
 spec:
-  type: {{ .Values.serviceType }}
-  {{- if eq .Values.serviceType "LoadBalancer" }}
-  loadBalancerIP: {{ default "" .Values.loadBalancerIP }}
-  {{- end }}
   selector:
     app: {{ template "fullname" . }}
   ports:
