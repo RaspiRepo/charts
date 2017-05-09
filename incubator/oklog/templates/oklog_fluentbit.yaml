@@ -19,11 +19,11 @@ spec:
               cpu: 0.15
           securityContext:
             privileged: true
-          image: fluent/fluent-bit-kubernetes-daemonset:0.11
+          image: wehco/oklog-kubernetes:v0.2.1
           command:
             - '/bin/sh'
             - '-c'
-            - '/fluent-bit/bin/fluent-bit -c /fluent-bit/etc/fluent-bit.conf | /oklog forward {{ template "fullname" . }}-service.{{ $.Release.Namespace }}.svc.cluster.local:3001'
+            - '/fluent-bit/bin/fluent-bit -c /fluent-bit/etc/fluent-bit.conf -o stdout -v | /oklog forward {{ template "fullname" . }}-service.{{ $.Release.Namespace }}.svc.cluster.local:3001'
           name: oklog-forward
           volumeMounts:
             - name: varlog
